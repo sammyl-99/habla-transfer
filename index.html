@@ -1,0 +1,697 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light dark}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>Habla Transfer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Nunito:wght@500;700;800&display=swap">
+<style>
+/* Layout: one phone-width column, a sticky status bar, full-height lesson screens. */
+:root{
+  --bg:#f2f3ee; --card:#ffffff; --fg:#1c2230; --muted:#6a7280; --line:#dfe2d9;
+  --accent:#e0a42c; --accent-ink:#2a1d05; --teal:#1f6f78; --teal-soft:#dcecee;
+  --good:#2f8f5b; --good-soft:#dff3e6; --bad:#c9463d; --bad-soft:#fae3e0;
+  --heart:#e2574f; --shadow:0 6px 18px rgba(28,34,48,.08);
+  --display:'Fraunces',Georgia,serif; --body:'Nunito','Segoe UI',system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141820; --card:#1d2330; --fg:#ecefe8; --muted:#9aa3ae; --line:#2c3443;
+  --accent:#f0b43a; --accent-ink:#1a1204; --teal:#5ec4cf; --teal-soft:#1b3238;
+  --good:#5fc48a; --good-soft:#1c3328; --bad:#f07a70; --bad-soft:#3b1f1d; --shadow:0 6px 18px rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141820; --card:#1d2330; --fg:#ecefe8; --muted:#9aa3ae; --line:#2c3443;
+  --accent:#f0b43a; --accent-ink:#1a1204; --teal:#5ec4cf; --teal-soft:#1b3238;
+  --good:#5fc48a; --good-soft:#1c3328; --bad:#f07a70; --bad-soft:#3b1f1d; --shadow:0 6px 18px rgba(0,0,0,.35); color-scheme:dark}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.app{max-width:520px;margin:0 auto;min-height:100%;display:flex;flex-direction:column}
+.screen{display:flex;flex-direction:column;flex:1;min-width:0}
+h1,h2,h3{font-family:var(--display);font-weight:700;margin:0;text-wrap:balance;line-height:1.15}
+.muted{color:var(--muted)}
+.eyebrow{font-size:.72rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+
+/* status bar */
+.status{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;align-items:center;gap:14px;padding:12px 0;font-weight:800;font-variant-numeric:tabular-nums}
+.status .stat{display:flex;align-items:center;gap:5px}
+.status .spacer{flex:1}
+.brand{font-family:var(--display);font-size:1.25rem}
+.icon{width:20px;height:20px;flex:none}
+.fire{color:var(--accent)} .xp{color:var(--teal)} .hp{color:var(--heart)}
+
+/* home */
+.hero{padding:10px 0 18px}
+.hero h1{font-size:2.1rem}
+.hero p{margin:8px 0 0;max-width:34ch}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px}
+.mode{background:var(--card);border-radius:18px;padding:14px;text-align:left;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:6px;min-width:0}
+.mode b{font-size:1.02rem}
+.mode small{color:var(--muted);line-height:1.3}
+.mode.hot{background:var(--accent);color:var(--accent-ink)} .mode.hot small{color:var(--accent-ink);opacity:.8}
+.path{display:flex;flex-direction:column;gap:10px;padding-bottom:40px}
+.unit{display:flex;gap:14px;align-items:center;background:var(--card);border-radius:18px;padding:14px;text-align:left;box-shadow:var(--shadow);width:100%}
+.unit .n{width:46px;height:46px;border-radius:50%;flex:none;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:1.15rem;color:#fff;background:var(--u)}
+.unit .t{flex:1;min-width:0}
+.unit .t b{display:block} .unit .t small{color:var(--muted)}
+.unit .bar{height:6px;border-radius:3px;background:var(--line);margin-top:8px;overflow:hidden}
+.unit .bar i{display:block;height:100%;background:var(--u);width:var(--p)}
+.unit.locked{opacity:.55} .unit.locked .n{background:var(--line);color:var(--muted)}
+.crown{color:var(--accent);font-weight:800;font-size:.85rem;white-space:nowrap}
+
+/* lesson */
+.top{display:flex;align-items:center;gap:12px;padding:12px 0}
+.top .prog{flex:1;height:12px;border-radius:6px;background:var(--line);overflow:hidden}
+.top .prog i{display:block;height:100%;background:var(--good);width:var(--p);transition:width .3s}
+.top .hearts{color:var(--heart);font-weight:800;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:4px}
+.x{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:var(--muted);font-size:1.3rem}
+.x:hover{background:var(--card)}
+.ex{flex:1;display:flex;flex-direction:column;gap:16px;padding:8px 0 20px}
+.ex h2{font-size:1.45rem}
+.bubble{display:flex;gap:12px;align-items:flex-start}
+.avatar{width:44px;height:44px;border-radius:50%;flex:none;background:var(--teal-soft);color:var(--teal);display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:1.1rem}
+.speech{background:var(--card);border-radius:4px 18px 18px 18px;padding:12px 14px;box-shadow:var(--shadow);flex:1;min-width:0}
+.speech .es{font-size:1.15rem;font-weight:700;min-height:1.6em}
+.speech .es.hidden-text{color:transparent;background:repeating-linear-gradient(90deg,var(--line) 0 14px,transparent 14px 20px);border-radius:6px;user-select:none}
+.speech .en{color:var(--muted);font-size:.92rem;margin-top:4px}
+.audio{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:var(--teal-soft);color:var(--teal);font-weight:800;font-size:.9rem}
+.chip.big{padding:12px 16px;font-size:1rem}
+.chip:disabled{opacity:.5;cursor:default}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;align-items:center;gap:12px;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:14px;text-align:left;font-weight:700;font-size:1.02rem;transition:transform .08s}
+.opt:active{transform:scale(.985)}
+.opt .k{width:28px;height:28px;border-radius:8px;border:2px solid var(--line);display:grid;place-items:center;font-size:.8rem;color:var(--muted);flex:none}
+.opt.sel{border-color:var(--teal);background:var(--teal-soft)}
+.opt.ok{border-color:var(--good);background:var(--good-soft)}
+.opt.no{border-color:var(--bad);background:var(--bad-soft)}
+.opt:disabled{cursor:default}
+.tiles{display:flex;flex-wrap:wrap;gap:8px}
+.tile{padding:10px 14px;border-radius:12px;background:var(--card);border:2px solid var(--line);border-bottom-width:4px;font-weight:700;font-size:1.02rem}
+.tile.used{opacity:.3;pointer-events:none}
+.answer-line{min-height:58px;border-bottom:2px solid var(--line);display:flex;flex-wrap:wrap;gap:8px;padding:6px 0 10px}
+.prompt-en{font-family:var(--display);font-size:1.5rem;font-weight:500}
+.hint{font-size:.9rem;color:var(--muted)}
+.reveal{background:var(--card);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
+.reveal .es{font-size:1.3rem;font-weight:800}
+.speakbox{border:2px dashed var(--line);border-radius:18px;padding:22px 16px;text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center}
+.speakbox .mic{width:64px;height:64px;border-radius:50%;background:var(--teal);color:#fff;display:grid;place-items:center}
+.intro-card{background:var(--card);border-radius:18px;padding:18px;box-shadow:var(--shadow);font-size:1.05rem}
+.intro-card .eyebrow{margin-bottom:8px}
+.dots{display:flex;gap:6px;justify-content:center}
+.dots i{width:8px;height:8px;border-radius:50%;background:var(--line)} .dots i.on{background:var(--teal)}
+
+/* footer check bar */
+.foot{position:sticky;bottom:0;background:var(--bg);padding:12px 0 calc(12px + env(safe-area-inset-bottom,0px));border-top:2px solid var(--line)}
+.foot.ok{background:var(--good-soft);border-color:var(--good)} .foot.no{background:var(--bad-soft);border-color:var(--bad)}
+.foot .msg{font-weight:800;margin-bottom:8px;display:flex;flex-direction:column;gap:2px}
+.foot.ok .msg{color:var(--good)} .foot.no .msg{color:var(--bad)}
+.foot .why{font-weight:500;color:var(--fg);font-size:.92rem}
+.btn{width:100%;padding:14px;border-radius:14px;font-weight:800;font-size:1.05rem;background:var(--good);color:#fff;border-bottom:4px solid rgba(0,0,0,.18)}
+.btn:disabled{background:var(--line);color:var(--muted);border-bottom-color:transparent;cursor:default}
+.btn.alt{background:var(--card);color:var(--fg);border:2px solid var(--line)}
+.btn.warm{background:var(--accent);color:var(--accent-ink)}
+.row{display:flex;gap:10px} .row>*{flex:1}
+
+/* results */
+.result{flex:1;display:flex;flex-direction:column;justify-content:center;gap:18px;text-align:center;padding:30px 0}
+.result h1{font-size:2.2rem}
+.tiles-stat{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.tiles-stat div{background:var(--card);border-radius:14px;padding:12px;box-shadow:var(--shadow)}
+.tiles-stat b{display:block;font-family:var(--display);font-size:1.5rem;font-variant-numeric:tabular-nums}
+.tiles-stat small{color:var(--muted);font-weight:700}
+
+/* chat */
+.chat{flex:1;display:flex;flex-direction:column;gap:10px;padding:8px 0 16px;overflow:auto}
+.msg{max-width:85%;padding:11px 14px;border-radius:18px;background:var(--card);box-shadow:var(--shadow);min-width:0;overflow-wrap:anywhere}
+.msg.me{align-self:flex-end;background:var(--teal);color:#fff;border-bottom-right-radius:4px}
+.msg.them{align-self:flex-start;border-bottom-left-radius:4px}
+.msg .tr{display:block;font-size:.85rem;opacity:.75;margin-top:4px}
+.msg.them.hide .text{color:transparent;background:repeating-linear-gradient(90deg,var(--line) 0 14px,transparent 14px 20px);border-radius:6px}
+.inputrow{display:flex;gap:8px}
+.inputrow input{flex:1;min-width:0;padding:12px 14px;border-radius:14px;border:2px solid var(--line);background:var(--card);color:var(--fg);font:inherit}
+.toggle{display:flex;align-items:center;gap:8px;font-weight:700;font-size:.9rem;color:var(--muted)}
+.toggle input{accent-color:var(--teal);width:18px;height:18px}
+.settings{background:var(--card);border-radius:18px;padding:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:12px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(90px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:800;z-index:20;box-shadow:var(--shadow)}
+
+/* car mode */
+.drive{flex:1;display:flex;flex-direction:column;gap:14px;padding:8px 0 24px}
+.drive .big{display:flex;flex-direction:column;align-items:center;gap:12px;padding:18px;background:var(--card);border-radius:22px;box-shadow:var(--shadow);text-align:left;width:100%;min-width:0}
+.drive .big b{font-size:1.35rem;font-family:var(--display)}
+.drive .big small{color:var(--muted);font-size:1rem;text-align:center}
+.player{flex:1;display:flex;flex-direction:column;gap:18px;padding:8px 0 24px;text-align:center}
+.player .stage{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:14px;min-height:40vh}
+.player .role{font-size:1rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.player .line{font-family:var(--display);font-size:clamp(1.6rem,6vw,2.4rem);font-weight:700;line-height:1.2;max-width:22ch;text-wrap:balance}
+.player .line.es{color:var(--teal)}
+.player .yours{font-size:1.1rem;color:var(--muted);min-height:1.6em}
+.ring{width:84px;height:84px;border-radius:50%;border:6px solid var(--line);display:grid;place-items:center;font-weight:800;font-size:1.3rem;font-variant-numeric:tabular-nums;color:var(--accent)}
+.ring.live{border-color:var(--accent)}
+.ctl{display:grid;grid-template-columns:1fr 1.6fr 1fr;gap:10px}
+.ctl button{padding:20px 10px;border-radius:18px;font-weight:800;font-size:1.05rem;background:var(--card);box-shadow:var(--shadow)}
+.ctl .main{background:var(--accent);color:var(--accent-ink);font-size:1.3rem}
+.pbar{height:8px;border-radius:4px;background:var(--line);overflow:hidden}.pbar i{display:block;height:100%;background:var(--accent);width:var(--p);transition:width .4s}
+.srow{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;color:var(--muted);font-weight:700;font-size:.9rem}
+.srow select{font:inherit;padding:6px 8px;border-radius:10px;border:2px solid var(--line);background:var(--card);color:var(--fg)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="app" id="app"></div>
+
+<script>
+// Lesson content. Order follows the Language Transfer Complete Spanish progression:
+// transfer rules → quiero/puedo/voy a + infinitive → tener & questions → es/está/hay →
+// object pronouns → full present → reflexives → preterite → imperfect → future/conditional → subjunctive.
+// All sentences are original; explanations are in our own words.
+const UNITS = [
+{
+id:'u1', name:'Transfer', tag:'Words you already own', color:'#d9a21b',
+intro:[
+ 'Thousands of English words ending in -tion are Spanish if you say -ción: nation → nación, information → información. The stress sits on that last syllable.',
+ '-ic becomes -ico (fantastic → fantástico), -al stays -al (normal, personal), -ble stays -ble (posible, terrible), -ous becomes -oso (famoso, curioso), -ent becomes -ente (diferente, importante).',
+ 'Es means "is" or "it is". Put a question mark in your voice and ¿Es posible? means "Is it possible?". No extra words needed.',
+],
+ex:[
+ {t:'transfer',q:'Make "conversation" Spanish.',opts:['conversación','conversatión','conversazione'],a:0,why:'-tion → -ción, stress on the last syllable.'},
+ {t:'transfer',q:'Make "fantastic" Spanish.',opts:['fantastico','fantástico','fantásticu'],a:1,why:'-ic → -ico. The written accent marks the stressed syllable.'},
+ {t:'listen',es:'¿Es posible?',en:'Is it possible?',opts:['Sí, es posible.','Es la estación.','No, es famoso.'],a:0,why:'"¿Es posible?" is answered with "Sí, es posible" or "No, no es posible".'},
+ {t:'listen',es:'Es muy importante.',en:'It is very important.',opts:['Es la nación.','Sí, es una situación muy importante.','No, es fantástico el tren.'],a:1,why:'Agree and build on it: "a very important situation".'},
+ {t:'build',en:'It is terrible.',es:'Es terrible',tiles:['posible','no']},
+ {t:'listen',es:'¿Es diferente o es normal?',en:'Is it different or is it normal?',opts:['Es diferente, es muy especial.','Es la información.','Es terrible y no.'],a:0,why:'"Different, very special" answers the either/or question.'},
+ {t:'transfer',q:'Make "curious" Spanish.',opts:['curiós','curioso','curiente'],a:1,why:'-ous → -oso.'},
+ {t:'speak',en:'Is it important?',es:'¿Es importante?',hint:'Same words as the statement, rising voice.'},
+ {t:'listen',es:'No es posible, es imposible.',en:"It's not possible, it's impossible.",opts:['Es la nación.','Es una situación terrible.','Es fantástico.'],a:1,why:'"Not possible" calls for sympathy, not "fantastic".'},
+ {t:'build',en:'It is not normal.',es:'No es normal',tiles:['es','posible']},
+ {t:'speak',en:'It is a very interesting conversation.',es:'Es una conversación muy interesante',hint:'conversation → conversación; "muy" = very.'},
+ {t:'listen',es:'¿Es una situación especial?',en:'Is it a special situation?',opts:['Sí, es muy especial y muy diferente.','La información es terrible.','Es el tren.'],a:0,why:'Yes, and expand.'},
+]},
+{
+id:'u2', name:'Quiero, puedo, voy a', tag:'Want, can, going to', color:'#c0552b',
+intro:[
+ 'Spanish verbs in the dictionary end in -ar, -er or -ir: hablar (to speak), comer (to eat), venir (to come). You can do a lot with three helpers and that dictionary form.',
+ 'Quiero = I want. Quieres = you want. Quiere = he/she wants. Quiero comer = I want to eat. Flip it with no: No quiero comer.',
+ 'Puedo = I can, puedes = you can. Voy a = I am going to, vas a = you are going to. Voy a hablar = I am going to speak.',
+ 'Vamos a = let us / we are going to. ¿Vamos a comer? = Shall we eat?',
+],
+ex:[
+ {t:'listen',es:'¿Quieres comer?',en:'Do you want to eat?',opts:['Sí, quiero comer ahora.','Es muy normal.','No puedo hablar.'],a:0,why:'Answer "do you want" with "I want": quiero.'},
+ {t:'build',en:'I want to speak Spanish.',es:'Quiero hablar español',tiles:['comer','puedo']},
+ {t:'listen',es:'¿Puedes venir mañana?',en:'Can you come tomorrow?',opts:['No, mañana no puedo. ¿Puedes venir tú?','Quiero una información.','Es fantástico el tren.'],a:0,why:'"I can\'t tomorrow, can you come?" bounces the question back.'},
+ {t:'speak',en:"I'm going to eat.",es:'Voy a comer',hint:'voy a + dictionary verb.'},
+ {t:'listen',es:'Voy a hablar con Marta.',en:"I'm going to talk with Marta.",opts:['¿Vas a hablar ahora?','Es una nación.','Quiero comer una conversación.'],a:0,why:'"Are you going to speak now?" follows naturally.'},
+ {t:'build',en:"Can you speak more slowly?",es:'¿Puedes hablar más despacio?',tiles:['quiero','comer']},
+ {t:'listen',es:'¿Vamos a comer algo?',en:'Shall we eat something?',opts:['Sí, vamos. Quiero comer.','No es posible comer la información.','Puedes.'],a:0,why:'"Yes, let\'s. I want to eat."'},
+ {t:'speak',en:"I can't come.",es:'No puedo venir',hint:'no + puedo + venir.'},
+ {t:'listen',es:'No quiero esperar.',en:"I don't want to wait.",opts:['¿Puedes esperar un momento?','Es curioso el momento.','Voy a la nación.'],a:0,why:'Ask them to wait a moment: ¿Puedes esperar un momento?'},
+ {t:'listen',es:'¿Qué quieres hacer?',en:'What do you want to do?',opts:['Quiero ver la ciudad.','Es muy diferente.','Puedes venir.'],a:0,why:'"I want to see the city" answers "what do you want to do".'},
+ {t:'build',en:'Do you want to come?',es:'¿Quieres venir?',tiles:['puedo','hablar']},
+ {t:'listen',es:'Puedo ayudar si quieres.',en:'I can help if you want.',opts:['Sí, gracias. ¿Puedes venir mañana?','No es terrible.','Voy a comer el momento.'],a:0,why:'Accept the help and arrange when.'},
+ {t:'speak',en:'We are going to speak Spanish.',es:'Vamos a hablar español',hint:'vamos a + hablar.'},
+]},
+{
+id:'u3', name:'Tengo & preguntas', tag:'Having and asking', color:'#6b8e3d',
+intro:[
+ 'Tengo = I have, tienes = you have, tiene = he/she has. Tengo que + verb = I have to: Tengo que trabajar.',
+ 'Question words: qué (what), dónde (where), cuándo (when), por qué (why), cómo (how), quién (who). Porque (one word, no accent) = because.',
+ 'Negatives go before the verb and don\'t need "do": No tengo tiempo = I don\'t have time. Nada = nothing, nunca = never, and Spanish happily doubles them: No tengo nada.',
+],
+ex:[
+ {t:'listen',es:'¿Tienes tiempo?',en:'Do you have time?',opts:['No, no tengo tiempo ahora. Tengo que trabajar.','Es muy posible el tren.','Quiero la nación.'],a:0,why:'Tiempo = time. Explain why with "tengo que".'},
+ {t:'build',en:'I have to go.',es:'Tengo que ir',tiles:['quiero','comer']},
+ {t:'listen',es:'¿Por qué no quieres venir?',en:"Why don't you want to come?",opts:['Porque tengo que trabajar mañana.','Es fantástico.','¿Dónde está el momento?'],a:0,why:'"Por qué" asks, "porque" answers.'},
+ {t:'listen',es:'¿Dónde quieres comer?',en:'Where do you want to eat?',opts:['Quiero comer en casa.','Tengo que hablar.','Cuándo es posible.'],a:0,why:'"At home" answers where. En casa = at home.'},
+ {t:'speak',en:'What do you have?',es:'¿Qué tienes?',hint:'qué + tienes.'},
+ {t:'listen',es:'¿Cuándo puedes venir?',en:'When can you come?',opts:['Puedo venir mañana.','No tengo nada.','Es importante por qué.'],a:0,why:'Mañana (tomorrow) answers "when".'},
+ {t:'build',en:"I don't have anything.",es:'No tengo nada',tiles:['nunca','tiempo']},
+ {t:'listen',es:'¿Quién tiene el teléfono?',en:'Who has the phone?',opts:['Lo tiene Marta.','Es muy curioso el teléfono.','Voy a comer.'],a:0,why:'Quién = who. "Marta has it."'},
+ {t:'speak',en:'Why do you want to wait?',es:'¿Por qué quieres esperar?',hint:'por qué (two words) when asking.'},
+ {t:'listen',es:'No tengo tiempo, tengo mucho trabajo.',en:"I don't have time, I have a lot of work.",opts:['¿Cómo puedo ayudar?','Es la información.','Quiero esperar la nación.'],a:0,why:'Offer help: "How can I help?"'},
+ {t:'build',en:'How are you going to go?',es:'¿Cómo vas a ir?',tiles:['dónde','tengo']},
+ {t:'listen',es:'¿Qué tienes que hacer hoy?',en:'What do you have to do today?',opts:['Tengo que ir a la ciudad.','Nunca es posible.','Por qué.'],a:0,why:'Hoy = today. Answer with "tengo que + verb".'},
+]},
+{
+id:'u4', name:'Es, está, hay', tag:'Being and being somewhere', color:'#2b6f8f',
+intro:[
+ 'Spanish has two "is". Es is for what something is: Es grande, es mi amigo. Está is for where something is and how it is right now: Está aquí, está cansado.',
+ 'Estoy = I am (where/how), estás = you are. ¿Cómo estás? Estoy bien. Soy = I am (what/who): Soy de Australia.',
+ 'Hay = there is / there are. ¿Hay un restaurante aquí? Hay muchos.',
+],
+ex:[
+ {t:'listen',es:'¿Cómo estás?',en:'How are you?',opts:['Estoy bien, gracias. ¿Y tú?','Es grande.','Hay un tren.'],a:0,why:'The classic exchange. ¿Y tú? = And you?'},
+ {t:'listen',es:'¿Dónde está la estación?',en:'Where is the station?',opts:['Está cerca, a la derecha.','Es una estación.','Soy de aquí.'],a:0,why:'Location → está. Cerca = near, a la derecha = on the right.'},
+ {t:'build',en:'I am tired.',es:'Estoy cansado',tiles:['soy','grande']},
+ {t:'listen',es:'¿Hay un restaurante cerca?',en:'Is there a restaurant nearby?',opts:['Sí, hay uno muy bueno aquí al lado.','Está cansado.','Es mi amigo.'],a:0,why:'Hay → "yes, there is one". Al lado = next door.'},
+ {t:'speak',en:'Where are you?',es:'¿Dónde estás?',hint:'location → estás.'},
+ {t:'listen',es:'¿De dónde eres?',en:'Where are you from?',opts:['Soy de Australia, de Melbourne.','Estoy en la estación.','Hay mucho.'],a:0,why:'Origin is permanent → soy de.'},
+ {t:'build',en:'The food is very good.',es:'La comida está muy buena',tiles:['es','hay']},
+ {t:'listen',es:'Mi amigo está en casa, no está aquí.',en:"My friend is at home, he isn't here.",opts:['¿Cuándo va a venir?','Es terrible la casa.','Soy tu amigo.'],a:0,why:'Ask when he will come.'},
+ {t:'speak',en:'Is there a problem?',es:'¿Hay un problema?',hint:'hay + un problema.'},
+ {t:'listen',es:'Es muy caro.',en:"It's very expensive.",opts:['Sí, pero es muy bueno.','Estoy aquí.','Hay cansado.'],a:0,why:'Pero = but. "Yes, but it\'s very good."'},
+ {t:'listen',es:'¿Estás listo?',en:'Are you ready?',opts:['Sí, estoy listo. Vamos.','Es listo.','Hay listo.'],a:0,why:'Ready-right-now → estoy listo.'},
+ {t:'build',en:'Where is the bathroom?',es:'¿Dónde está el baño?',tiles:['es','hay']},
+]},
+{
+id:'u5', name:'Me, te, lo, la', tag:'Pronouns that stick to verbs', color:'#8a4b9a',
+intro:[
+ 'Me = me, te = you, lo = him/it, la = her/it, nos = us. They go in front of the working verb: Te quiero ver = I want to see you. Lo tengo = I have it.',
+ 'With an infinitive you can also glue them on the end: Quiero verte. Both are right.',
+ 'Me gusta = it pleases me = I like. Me gusta la ciudad. ¿Te gusta? Gustan with plural things: Me gustan los trenes.',
+],
+ex:[
+ {t:'listen',es:'¿Me puedes ayudar?',en:'Can you help me?',opts:['Claro, te puedo ayudar. ¿Qué necesitas?','Lo tengo en casa.','Me gusta.'],a:0,why:'Claro = of course. Necesitas = you need.'},
+ {t:'build',en:'I want to see you.',es:'Te quiero ver',tiles:['lo','me']},
+ {t:'listen',es:'¿Tienes el libro?',en:'Do you have the book?',opts:['Sí, lo tengo aquí.','Sí, la tengo aquí.','Me tengo.'],a:0,why:'Libro is masculine → lo.'},
+ {t:'listen',es:'¿Te gusta la ciudad?',en:'Do you like the city?',opts:['Sí, me gusta mucho.','Lo quiero ver.','Nos vamos.'],a:0,why:'¿Te gusta? → Me gusta.'},
+ {t:'speak',en:'Can you call me tomorrow?',es:'¿Me puedes llamar mañana?',hint:'me + puedes + llamar.'},
+ {t:'listen',es:'No la veo. ¿Dónde está Marta?',en:"I don't see her. Where is Marta?",opts:['La veo allí, al lado de la puerta.','Lo tengo.','Me gustan.'],a:0,why:'Marta → la. Allí = over there, puerta = door.'},
+ {t:'build',en:'I like the trains.',es:'Me gustan los trenes',tiles:['gusta','te']},
+ {t:'listen',es:'¿Nos puedes esperar un momento?',en:'Can you wait for us a moment?',opts:['Sí, os espero aquí.','Me lo tengo.','Es un momento curioso.'],a:0,why:'Os = you all. "I\'ll wait for you here."'},
+ {t:'speak',en:'I have it.',es:'Lo tengo',hint:'lo before tengo.'},
+ {t:'listen',es:'¿Quieres comprarlo?',en:'Do you want to buy it?',opts:['Sí, quiero comprarlo, pero es caro.','Me gusta la nación.','Te veo.'],a:0,why:'Pronoun glued to the infinitive: comprarlo.'},
+ {t:'listen',es:'¿Te gustan las películas?',en:'Do you like films?',opts:['Sí, me gustan mucho. ¿Quieres ver una?','Lo veo.','Me gusta.'],a:0,why:'Plural → gustan.'},
+ {t:'build',en:'Do you want to see me?',es:'¿Me quieres ver?',tiles:['te','lo']},
+]},
+{
+id:'u6', name:'El presente', tag:'Everyone, every verb', color:'#b8403a',
+intro:[
+ 'For -ar verbs: hablo, hablas, habla, hablamos, hablan (I, you, he/she, we, they). For -er/-ir: como, comes, come, comemos, comen; vivo, vives, vive, vivimos, viven.',
+ 'The verb carries the person, so you rarely need yo/tú/él. Trabajo mucho = I work a lot.',
+ 'The present also does "do you…?" and "are you…ing?": ¿Trabajas aquí? = Do you work here? / Are you working here?',
+],
+ex:[
+ {t:'listen',es:'¿Qué haces?',en:'What are you doing?',opts:['Trabajo. Tengo mucho trabajo hoy.','Hablan español.','Comemos.'],a:0,why:'"I\'m working" — present tense covers it.'},
+ {t:'build',en:'I live in Melbourne.',es:'Vivo en Melbourne',tiles:['vives','como']},
+ {t:'listen',es:'¿Hablas español?',en:'Do you speak Spanish?',opts:['Sí, hablo un poco. Aprendo ahora.','Hablan mucho.','Vivimos aquí.'],a:0,why:'Un poco = a little. Aprendo = I learn.'},
+ {t:'listen',es:'¿Dónde vives?',en:'Where do you live?',opts:['Vivo cerca de la ciudad.','Vive en el tren.','Vivimos la nación.'],a:0,why:'Vivo = I live.'},
+ {t:'speak',en:'We eat at home.',es:'Comemos en casa',hint:'comer → comemos.'},
+ {t:'listen',es:'Mis amigos trabajan mucho.',en:'My friends work a lot.',opts:['¿Dónde trabajan?','Trabajo.','Vivo aquí.'],a:0,why:'They → trabajan. Ask where.'},
+ {t:'build',en:'Do you understand?',es:'¿Entiendes?',tiles:['entiendo','comes']},
+ {t:'listen',es:'No entiendo. ¿Puedes repetir?',en:"I don't understand. Can you repeat?",opts:['Claro. Lo repito más despacio.','Entiendes.','Vivimos.'],a:0,why:'Repito = I repeat. Más despacio = more slowly.'},
+ {t:'speak',en:'What do you think?',es:'¿Qué piensas?',hint:'pensar → piensas (the e splits to ie).'},
+ {t:'listen',es:'¿Comes carne?',en:'Do you eat meat?',opts:['No, no como carne. Como mucha verdura.','Comemos.','Hablas.'],a:0,why:'Verdura = vegetables.'},
+ {t:'listen',es:'Aprendemos español juntos.',en:'We learn Spanish together.',opts:['¡Qué bien! ¿Practicáis mucho?','Aprendo.','Vive.'],a:0,why:'Juntos = together.'},
+ {t:'build',en:'They speak very fast.',es:'Hablan muy rápido',tiles:['hablo','despacio']},
+]},
+{
+id:'u7', name:'Se y los reflexivos', tag:'Doing things to yourself', color:'#2f8f7a',
+intro:[
+ 'Me llamo = I call myself = my name is. ¿Cómo te llamas? Se llama Marta.',
+ 'Verbs listed with -se are reflexive: levantarse (to get up), sentirse (to feel). Me levanto temprano. ¿Cómo te sientes?',
+ 'Se also makes general statements: Se puede = one can / you can. Se habla español aquí. Se vende = for sale.',
+],
+ex:[
+ {t:'listen',es:'¿Cómo te llamas?',en:"What's your name?",opts:['Me llamo Sam. ¿Y tú?','Se llama bien.','Me levanto.'],a:0,why:'Me llamo + name.'},
+ {t:'build',en:'His name is Carlos.',es:'Se llama Carlos',tiles:['me','llamas']},
+ {t:'listen',es:'¿A qué hora te levantas?',en:'What time do you get up?',opts:['Me levanto a las siete.','Se levanta la ciudad.','Te llamas.'],a:0,why:'A las siete = at seven.'},
+ {t:'listen',es:'¿Se puede aparcar aquí?',en:'Can one park here?',opts:['No, aquí no se puede. Allí sí.','Me puedo.','Se llama.'],a:0,why:'Se puede = it\'s allowed.'},
+ {t:'speak',en:'How do you feel?',es:'¿Cómo te sientes?',hint:'sentirse → te sientes.'},
+ {t:'listen',es:'Me siento un poco cansado hoy.',en:'I feel a bit tired today.',opts:['¿Quieres descansar?','Se vende.','Me llamo cansado.'],a:0,why:'Descansar = to rest.'},
+ {t:'build',en:'Spanish is spoken here.',es:'Aquí se habla español',tiles:['me','hablo']},
+ {t:'listen',es:'¿Cómo se dice "ticket" en español?',en:'How do you say "ticket" in Spanish?',opts:['Se dice "billete".','Me dice.','Te llamas billete.'],a:0,why:'¿Cómo se dice…? is your best friend.'},
+ {t:'speak',en:'I get up early.',es:'Me levanto temprano',hint:'me + levanto.'},
+ {t:'listen',es:'Nos vemos mañana.',en:'See you tomorrow.',opts:['Vale, nos vemos. ¡Hasta mañana!','Se ve.','Me llamo mañana.'],a:0,why:'Nos vemos = we see each other = see you.'},
+ {t:'listen',es:'¿Te quedas aquí o te vas?',en:'Are you staying here or leaving?',opts:['Me quedo un rato más.','Se queda la casa.','Te vas.'],a:0,why:'Quedarse = to stay. Un rato = a while.'},
+ {t:'build',en:'What is this called?',es:'¿Cómo se llama esto?',tiles:['me','llamo']},
+]},
+{
+id:'u8', name:'El pasado', tag:'What happened', color:'#9a6a2f',
+intro:[
+ 'The simple past (preterite) for -ar: hablé, hablaste, habló, hablamos, hablaron. For -er/-ir: comí, comiste, comió, comimos, comieron.',
+ 'The accent on the end flips the meaning: hablo (I speak) vs habló (he spoke). Hear it.',
+ 'A few you just learn: fui (I went / I was), fuiste, fue; hice (I did), hiciste, hizo; tuve (I had), tuviste, tuvo; estuve (I was, location).',
+],
+ex:[
+ {t:'listen',es:'¿Qué hiciste ayer?',en:'What did you do yesterday?',opts:['Trabajé y después comí con amigos.','Hago mucho.','Voy a hacer.'],a:0,why:'Ayer = yesterday. Después = afterwards.'},
+ {t:'build',en:'I went to the city.',es:'Fui a la ciudad',tiles:['voy','fue']},
+ {t:'listen',es:'¿Hablaste con Marta?',en:'Did you speak with Marta?',opts:['Sí, hablé con ella esta mañana.','Hablo con ella.','Habló tú.'],a:0,why:'Hablé = I spoke. Esta mañana = this morning.'},
+ {t:'listen',es:'Ayer no pude venir, lo siento.',en:"Yesterday I couldn't come, sorry.",opts:['No pasa nada. ¿Qué pasó?','Puedo venir.','Es terrible venir.'],a:0,why:'No pasa nada = no worries. ¿Qué pasó? = what happened?'},
+ {t:'speak',en:'Did you eat?',es:'¿Comiste?',hint:'comer → comiste.'},
+ {t:'listen',es:'¿Dónde estuviste?',en:'Where were you?',opts:['Estuve en casa todo el día.','Estoy aquí.','Fui ser.'],a:0,why:'Estuve = I was (somewhere).'},
+ {t:'build',en:'She bought a car.',es:'Compró un coche',tiles:['compré','compras']},
+ {t:'listen',es:'Fuimos al restaurante y comimos muy bien.',en:'We went to the restaurant and ate very well.',opts:['¡Qué bien! ¿Qué comisteis?','Vamos.','Como bien.'],a:0,why:'Comisteis = you all ate.'},
+ {t:'speak',en:'I had a problem.',es:'Tuve un problema',hint:'tener → tuve.'},
+ {t:'listen',es:'¿Viste la película?',en:'Did you see the film?',opts:['Sí, la vi anoche. Me gustó mucho.','La veo.','Vi tú.'],a:0,why:'Vi = I saw, anoche = last night, me gustó = I liked.'},
+ {t:'listen',es:'¿Qué te dijo?',en:'What did he tell you?',opts:['Me dijo que no puede venir.','Me dice hola.','Digo nada.'],a:0,why:'Dijo = he said. Dijo que = said that.'},
+ {t:'build',en:'We arrived late.',es:'Llegamos tarde',tiles:['llegué','temprano']},
+]},
+{
+id:'u9', name:'Era, estaba, había', tag:'How things used to be', color:'#5c6bb0',
+intro:[
+ 'The imperfect paints the background: what used to happen or was going on. -ar: hablaba, hablabas, hablaba, hablábamos, hablaban. -er/-ir: comía, comías, comía, comíamos, comían.',
+ 'Era = was (what it was), estaba = was (where / how), había = there was/were. Cuando era niño, vivía en Sídney.',
+ 'Pair them: the imperfect sets the scene, the preterite is the event. Estaba en casa cuando llamaste.',
+],
+ex:[
+ {t:'listen',es:'¿Dónde vivías antes?',en:'Where did you use to live before?',opts:['Vivía en Sídney cuando era niño.','Vivo en Hobart.','Viví mañana.'],a:0,why:'Vivía = I used to live.'},
+ {t:'build',en:'There was a lot of noise.',es:'Había mucho ruido',tiles:['hay','era']},
+ {t:'listen',es:'¿Qué hacías cuando te llamé?',en:'What were you doing when I called you?',opts:['Estaba comiendo con mi familia.','Hago la comida.','Llamé.'],a:0,why:'Estaba + -ando/-iendo = was doing.'},
+ {t:'listen',es:'Antes trabajaba en un banco.',en:'I used to work in a bank.',opts:['¿Y te gustaba?','Trabajo.','¿Dónde está el banco ahora?'],a:0,why:'Keep the story going: did you like it?'},
+ {t:'speak',en:'It was very big.',es:'Era muy grande',hint:'description in the past → era.'},
+ {t:'listen',es:'Cuando era joven, iba mucho a la playa.',en:'When I was young I went to the beach a lot.',opts:['Yo también. Me encantaba el mar.','Voy ahora.','Fui una vez.'],a:0,why:'Me encantaba = I used to love.'},
+ {t:'build',en:'I was tired.',es:'Estaba cansado',tiles:['era','estoy']},
+ {t:'listen',es:'Había mucha gente en la estación.',en:'There were a lot of people at the station.',opts:['Sí, estaba llena. No podía entrar.','Hay nada.','Es la gente.'],a:0,why:'Llena = full. No podía = I couldn\'t (ongoing).'},
+ {t:'speak',en:'We used to speak English.',es:'Hablábamos inglés',hint:'-ábamos for we.'},
+ {t:'listen',es:'¿Cómo era tu casa?',en:'What was your house like?',opts:['Era pequeña pero muy bonita.','Está aquí.','Fue.'],a:0,why:'Bonita = pretty.'},
+ {t:'listen',es:'No sabía que vivías aquí.',en:"I didn't know you lived here.",opts:['Sí, desde hace dos años.','No sé.','Vivía tú.'],a:0,why:'Desde hace dos años = for two years now.'},
+ {t:'build',en:'She was sleeping.',es:'Estaba durmiendo',tiles:['era','duerme']},
+]},
+{
+id:'u10', name:'El futuro y el condicional', tag:'Will and would', color:'#c76b8a',
+intro:[
+ 'Future: take the whole infinitive and add -é, -ás, -á, -emos, -án. Hablaré, comerás, vivirá. Irregular stems: tendré, podré, haré, diré.',
+ 'Conditional: same stems, add -ía: hablaría, podría, me gustaría (I would like).',
+ 'Polite requests use it: ¿Podrías ayudarme? Me gustaría un café.',
+],
+ex:[
+ {t:'listen',es:'¿Qué harás mañana?',en:'What will you do tomorrow?',opts:['Iré a la ciudad y veré a un amigo.','Fui ayer.','Hago.'],a:0,why:'Iré = I will go, veré = I will see.'},
+ {t:'build',en:'I would like a coffee.',es:'Me gustaría un café',tiles:['gusta','quiero']},
+ {t:'listen',es:'¿Podrías ayudarme con esto?',en:'Could you help me with this?',opts:['Claro, te ayudaré ahora mismo.','Me ayudaste.','Puedo ayer.'],a:0,why:'Ahora mismo = right now.'},
+ {t:'listen',es:'Tendremos tiempo el sábado.',en:"We'll have time on Saturday.",opts:['Perfecto, entonces hablaremos el sábado.','Tuvimos.','Tengo.'],a:0,why:'Entonces = then.'},
+ {t:'speak',en:'I will call you later.',es:'Te llamaré más tarde',hint:'llamar + é.'},
+ {t:'listen',es:'¿Vendrás a la fiesta?',en:'Will you come to the party?',opts:['Sí, vendré, pero llegaré un poco tarde.','Vine.','Vengo ayer.'],a:0,why:'Vendré = I will come.'},
+ {t:'build',en:'What would you do?',es:'¿Qué harías?',tiles:['harás','hiciste']},
+ {t:'listen',es:'Me gustaría vivir en España.',en:'I would like to live in Spain.',opts:['¿En qué ciudad vivirías?','Vives.','Viví.'],a:0,why:'Vivirías = you would live.'},
+ {t:'speak',en:'Could you repeat that?',es:'¿Podrías repetir eso?',hint:'podrías = could you.'},
+ {t:'listen',es:'Será difícil, pero lo haremos.',en:"It'll be hard, but we'll do it.",opts:['Sí, lo haremos juntos.','Lo hicimos.','Es fácil.'],a:0,why:'Haremos = we will do.'},
+ {t:'listen',es:'¿A qué hora llegará el tren?',en:'What time will the train arrive?',opts:['Llegará a las nueve y media.','Llegó.','Llega.'],a:0,why:'A las nueve y media = at half past nine.'},
+ {t:'build',en:'We would eat here.',es:'Comeríamos aquí',tiles:['comemos','comimos']},
+]},
+{
+id:'u11', name:'El subjuntivo', tag:'Wanting others to', color:'#3f7f5f',
+intro:[
+ 'When you want someone else to do something, the second verb swaps its ending: -ar verbs take -e endings, -er/-ir take -a. Quiero que hables. Quiero que comas.',
+ 'Triggers: quiero que, es importante que, es posible que, espero que (I hope that), ojalá (hopefully). Ojalá que venga.',
+ 'Common irregulars: que vaya (ir), que tenga (tener), que sea (ser), que haga (hacer), que pueda (poder), que venga (venir).',
+],
+ex:[
+ {t:'listen',es:'Quiero que vengas a la cena.',en:'I want you to come to the dinner.',opts:['Vale, iré. ¿A qué hora quieres que llegue?','Vengo ayer.','Quiero que como.'],a:0,why:'Que llegue = that I arrive.'},
+ {t:'build',en:'I want you to speak Spanish.',es:'Quiero que hables español',tiles:['hablas','hablo']},
+ {t:'listen',es:'Es importante que tengas paciencia.',en:"It's important that you have patience.",opts:['Lo sé. Intento tener paciencia.','Tengo que tú.','Es importante tienes.'],a:0,why:'Intento = I try.'},
+ {t:'listen',es:'Espero que te guste la comida.',en:'I hope you like the food.',opts:['Seguro que sí. Me encanta la comida española.','Me gusta que.','Espero.'],a:0,why:'Seguro que sí = I\'m sure I will.'},
+ {t:'speak',en:'I hope it is possible.',es:'Espero que sea posible',hint:'ser → sea after espero que.'},
+ {t:'listen',es:'¿Quieres que te ayude?',en:'Do you want me to help you?',opts:['Sí, por favor. Quiero que me expliques esto.','Me ayudas ayer.','Quiero ayudas.'],a:0,why:'Que me expliques = that you explain to me.'},
+ {t:'build',en:'Hopefully it comes soon.',es:'Ojalá venga pronto',tiles:['viene','vendrá']},
+ {t:'listen',es:'No creo que pueda ir mañana.',en:"I don't think I can go tomorrow.",opts:['Qué pena. Ojalá puedas venir otro día.','Puedes ir.','No creo que vas.'],a:0,why:'Qué pena = what a shame. Puedas = you can (subjunctive).'},
+ {t:'speak',en:'I want you to stay.',es:'Quiero que te quedes',hint:'quedarse → te quedes.'},
+ {t:'listen',es:'Es posible que llueva esta tarde.',en:'It might rain this afternoon.',opts:['Entonces es mejor que llevemos paraguas.','Llueve ayer.','Es posible llueve.'],a:0,why:'Es mejor que llevemos = it\'s better that we take.'},
+ {t:'listen',es:'Dile que me llame cuando llegue.',en:'Tell him to call me when he arrives.',opts:['Vale, se lo diré.','Le llamo.','Dile ayer.'],a:0,why:'Se lo diré = I\'ll tell him (it).'},
+ {t:'build',en:'I hope you have time.',es:'Espero que tengas tiempo',tiles:['tienes','tengo']},
+]},
+];
+
+// Characters for free conversation
+const PERSONAS = [
+ {name:'Marta', city:'Valencia', role:'a friendly neighbour who runs a small café'},
+ {name:'Diego', city:'Buenos Aires', role:'a chatty taxi driver'},
+ {name:'Lucía', city:'Ciudad de México', role:'a university student who loves films'},
+];
+
+</script>
+<script>
+(function(){
+'use strict';
+const $app=document.getElementById('app');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const todayKey=()=>{const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
+const yesterdayKey=()=>{const d=new Date();d.setDate(d.getDate()-1);return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
+
+/* ---------- state ---------- */
+const DEF={pause:1,enVoice:'',listenMic:true,xp:0,streak:0,lastDay:null,hearts:5,heartsDay:todayKey(),units:{},showText:false,slow:false,unlockAll:false,todayXp:0,todayKey:todayKey()};
+let S=load();
+function fresh(){const s=Object.assign({},DEF,{units:{}});['u1','u2','u3'].forEach((id,i)=>{s.units[id]={done:UNITS[i].ex.length,crowns:1,best:0,known:true}});return s}
+function load(){try{const r=localStorage.getItem('habla');if(r){return Object.assign({},DEF,JSON.parse(r))}}catch(e){}return fresh()}
+function save(){try{localStorage.setItem('habla',JSON.stringify(S))}catch(e){}}
+function dayTick(){const t=todayKey();if(S.heartsDay!==t){S.hearts=5;S.heartsDay=t}if(S.todayKey!==t){S.todayXp=0;S.todayKey=t}
+  if(S.lastDay&&S.lastDay!==t&&S.lastDay!==yesterdayKey()){S.streak=0}save()}
+function addXp(n){const t=todayKey();if(S.lastDay!==t){if(S.lastDay===yesterdayKey()||S.streak===0){S.streak+=1}else{S.streak=1}S.lastDay=t}S.xp+=n;S.todayXp+=n;save()}
+const uprog=id=>S.units[id]||(S.units[id]={done:0,crowns:0,best:0});
+const unlocked=i=>S.unlockAll||i===0||uprog(UNITS[i-1].id).crowns>0;
+
+/* ---------- speech ---------- */
+let voices=[],voice=null;
+function pickVoice(){voices=speechSynthesis.getVoices();const es=voices.filter(v=>/^es/i.test(v.lang));
+  voice=es.find(v=>/es-ES/i.test(v.lang)&&/Google|Monica|Mónica|Paulina|Jorge|Elvira/i.test(v.name))||es.find(v=>/es-ES/i.test(v.lang))||es[0]||null}
+if('speechSynthesis' in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}
+function say(text,slow){if(!('speechSynthesis' in window))return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='es-ES';if(voice)u.voice=voice;u.rate=slow?0.6:0.92;u.pitch=1;speechSynthesis.speak(u)}catch(e){}}
+const canSpeak='speechSynthesis' in window;
+
+/* ---------- helpers ---------- */
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const norm=s=>s.toLowerCase().replace(/[¿¡?!.,]/g,'').replace(/\s+/g,' ').trim();
+const words=s=>s.replace(/[¿¡?!.,]/g,'').split(/\s+/).filter(Boolean);
+let toastT;function toast(m){let t=document.querySelector('.toast');if(!t){t=document.createElement('div');t.className='toast';document.body.appendChild(t)}t.textContent=m;clearTimeout(toastT);toastT=setTimeout(()=>t.remove(),1800)}
+const ICON={fire:'<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 1-3s0 3 2 3c0-4-3-5 2-10z"/></svg>',
+ bolt:'<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg>',
+ heart:'<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-8-5.5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.5-8 11-8 11z"/></svg>',
+ play:'<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4l12 8-12 8z"/></svg>',
+ turtle:'<svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M4 14a6 6 0 0 1 12-1h3a2 2 0 1 1 0 4h-1v2h-2v-2H8v2H6v-2H4a2 2 0 0 1 0-3z"/></svg>',
+ mic:'<svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3h2a7 7 0 0 1-6 6.9V22h-2v-3.1A7 7 0 0 1 5 12h2a5 5 0 0 0 10 0z"/></svg>'};
+
+/* ---------- routing ---------- */
+let view={name:'home'};
+function go(v){view=v;render()}
+function render(){dayTick();const r={home,lesson,immersion,chat,settings,drive,player}[view.name];$app.innerHTML='';$app.appendChild(r());}
+
+function statusBar(){const d=document.createElement('div');d.className='status';
+ d.innerHTML=`<span class="brand">Habla</span><span class="spacer"></span><span class="stat fire">${ICON.fire}${S.streak}</span><span class="stat xp">${ICON.bolt}${S.xp}</span><span class="stat hp">${ICON.heart}${S.hearts}</span><button class="x" id="gear" aria-label="Settings">⚙</button>`;
+ d.querySelector('#gear').onclick=()=>go({name:'settings'});return d}
+
+/* ---------- home ---------- */
+function home(){const s=document.createElement('div');s.className='screen';s.appendChild(statusBar());
+ const done=UNITS.filter(u=>uprog(u.id).crowns>0).length;
+ const h=document.createElement('div');h.className='hero';
+ h.innerHTML=`<p class="eyebrow">Spanish, the Language Transfer way</p><h1>Hola otra vez.</h1><p class="muted">${S.todayXp} XP today. Units 1–3 are marked known (you're past Language Transfer lesson 15). Most of your time here is spent listening to Spanish and answering in Spanish.</p>`;
+ s.appendChild(h);
+ const dv=document.createElement('button');dv.className='mode hot';dv.style.marginBottom='10px';dv.style.width='100%';dv.innerHTML='<b>Conducir · car mode</b><small>Hands-free audio lesson. The teacher talks you through it; you answer out loud in the pauses.</small>';dv.onclick=()=>go({name:'drive'});s.appendChild(dv);
+ const m=document.createElement('div');m.className='modes';
+ m.innerHTML=`<button class="mode" id="imm"><b>Inmersión</b><small>Non-stop listening: hear a line, pick your reply, keep going.</small></button>
+ <button class="mode" id="chat"><b>Charla libre</b><small>Chat with a Spanish speaker who uses only what you've learned.</small></button>`;
+ m.querySelector('#imm').onclick=()=>go({name:'immersion'});m.querySelector('#chat').onclick=()=>go({name:'chat'});
+ s.appendChild(m);
+ const p=document.createElement('div');p.className='path';
+ UNITS.forEach((u,i)=>{const up=uprog(u.id);const ok=unlocked(i);const b=document.createElement('button');b.className='unit'+(ok?'':' locked');b.style.setProperty('--u',u.color);b.style.setProperty('--p',Math.min(100,Math.round(100*up.done/u.ex.length))+'%');
+  b.innerHTML=`<span class="n">${ok?i+1:'🔒'}</span><span class="t"><b>${esc(u.name)}</b><small>${esc(u.tag)} · ${u.ex.length} exercises</small><span class="bar"><i></i></span></span>${up.known&&up.crowns===1?'<span class="crown muted">known</span>':up.crowns?`<span class="crown">♛ ${up.crowns}</span>`:''}`;
+  b.disabled=!ok;b.onclick=()=>startLesson(i);p.appendChild(b)});
+ s.appendChild(p);return s}
+
+/* ---------- lesson ---------- */
+let L=null;
+function startLesson(i){if(S.hearts<=0){toast('No hearts left. They refill tomorrow, or finish Inmersión to earn one.');return}
+ const u=UNITS[i];const seen=uprog(u.id).done>0;
+ L={ui:i,u,queue:u.ex.map((e,k)=>k),k:0,intro:seen?u.intro.length:0,correct:0,wrong:0,retry:[],xp:0,immersion:false};go({name:'lesson'})}
+
+function lesson(){const s=document.createElement('div');s.className='screen';const u=L.u;
+ if(L.intro<u.intro.length){s.appendChild(topBar(0.05));const ex=document.createElement('div');ex.className='ex';
+  ex.innerHTML=`<p class="eyebrow">Piénsalo · ${esc(u.name)}</p><div class="intro-card"><p class="eyebrow">Think it through</p>${esc(u.intro[L.intro])}</div><div class="dots">${u.intro.map((_,j)=>`<i class="${j===L.intro?'on':''}"></i>`).join('')}</div>`;
+  s.appendChild(ex);const f=document.createElement('div');f.className='foot';f.innerHTML=`<button class="btn">${L.intro===u.intro.length-1?'Start speaking':'Next'}</button>`;f.querySelector('button').onclick=()=>{L.intro++;render()};s.appendChild(f);return s}
+ if(L.k>=L.queue.length){if(L.retry.length&&!L.immersion){L.queue=L.retry;L.retry=[];L.k=0}else return results()}
+ const idx=L.queue[L.k];const e=u.ex[idx];
+ s.appendChild(topBar(L.k/L.queue.length));
+ const body=document.createElement('div');body.className='ex';s.appendChild(body);
+ const foot=document.createElement('div');foot.className='foot';s.appendChild(foot);
+ ({listen,build,speak,transfer})[e.t](e,body,foot,ok=>{afterAnswer(ok,idx,foot)});
+ return s}
+
+function topBar(p){const d=document.createElement('div');d.className='top';
+ d.innerHTML=`<button class="x" aria-label="Quit">✕</button><div class="prog"><i style="--p:${Math.round(p*100)}%"></i></div><span class="hearts">${ICON.heart}${S.hearts}</span>`;
+ d.querySelector('.x').onclick=()=>{window.speechSynthesis&&window.speechSynthesis.cancel();go({name:'home'})};return d}
+
+function afterAnswer(ok,idx,foot){if(ok){L.correct++;L.xp+=10}else{L.wrong++;S.hearts=Math.max(0,S.hearts-1);save();if(!L.immersion)L.retry.push(idx)}
+ foot.querySelector('.hearts-live')&&(foot.querySelector('.hearts-live').textContent=S.hearts);
+ document.querySelector('.top .hearts').innerHTML=ICON.heart+S.hearts;
+ const b=foot.querySelector('.btn');b.textContent=S.hearts<=0?'Out of hearts':'Continue';b.disabled=false;
+ b.onclick=()=>{window.speechSynthesis&&window.speechSynthesis.cancel();if(S.hearts<=0){addXp(L.xp);go({name:'home'});toast('Out of hearts. They refill tomorrow.');return}L.k++;render()}}
+
+function setFoot(foot,ok,why,extra){foot.className='foot '+(ok?'ok':'no');foot.innerHTML=`<div class="msg"><span>${ok?'¡Muy bien!':'Not quite.'}</span><span class="why">${esc(why||'')}</span>${extra||''}</div><button class="btn">Continue</button>`}
+
+function speechBubble(e,hideText){const d=document.createElement('div');d.className='bubble';
+ d.innerHTML=`<div class="avatar">${esc(e.who||'M')}</div><div class="speech"><div class="es ${hideText?'hidden-text':''}">${esc(e.es)}</div><div class="en" hidden>${esc(e.en)}</div></div>`;return d}
+
+function audioRow(text,onReveal){const d=document.createElement('div');d.className='audio';
+ d.innerHTML=`<button class="chip big" data-a="play">${ICON.play} Play</button><button class="chip" data-a="slow">${ICON.turtle} Slower</button>${onReveal?'<button class="chip" data-a="text">Show text</button>':''}`;
+ d.querySelector('[data-a=play]').onclick=()=>say(text,false);d.querySelector('[data-a=slow]').onclick=()=>say(text,true);
+ const t=d.querySelector('[data-a=text]');if(t)t.onclick=()=>{onReveal();t.disabled=true};
+ if(!canSpeak){d.insertAdjacentHTML('beforeend','<span class="hint">This browser has no Spanish voice; text is shown instead.</span>')}
+ return d}
+
+function listen(e,body,foot,done){const hide=canSpeak&&!S.showText;
+ body.innerHTML=`<p class="eyebrow">Listen, then reply</p><h2>What would you say back?</h2>`;
+ const bub=speechBubble(e,hide);body.appendChild(bub);
+ const esEl=bub.querySelector('.es');body.appendChild(audioRow(e.es,()=>esEl.classList.remove('hidden-text')));
+ const opts=shuffle(e.opts.map((o,i)=>({o,i})));const wrap=document.createElement('div');wrap.className='opts';
+ let sel=null;opts.forEach((o,k)=>{const b=document.createElement('button');b.className='opt';b.innerHTML=`<span class="k">${k+1}</span><span>${esc(o.o)}</span>`;
+  b.onclick=()=>{if(sel&&sel.locked)return;wrap.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');sel={b,o};foot.querySelector('.btn').disabled=false;say(o.o)};wrap.appendChild(b)});
+ body.appendChild(wrap);
+ foot.innerHTML=`<button class="btn" disabled>Check</button>`;
+ foot.querySelector('.btn').onclick=()=>{if(!sel)return;sel.locked=true;const ok=sel.o.i===e.a;wrap.querySelectorAll('.opt').forEach((x,k)=>{x.disabled=true;if(opts[k].i===e.a)x.classList.add('ok');else if(x===sel.b)x.classList.add('no')});
+  esEl.classList.remove('hidden-text');bub.querySelector('.en').hidden=false;setFoot(foot,ok,e.why,`<span class="why"><b>${esc(e.es)}</b> — ${esc(e.en)}</span>`);done(ok)};
+ setTimeout(()=>say(e.es),250)}
+
+function build(e,body,foot,done){const target=words(e.es);const pool=shuffle(target.concat(e.tiles||[]));
+ body.innerHTML=`<p class="eyebrow">Say it in Spanish</p><h2>How would you say…</h2><p class="prompt-en">${esc(e.en)}</p>`;
+ const line=document.createElement('div');line.className='answer-line';const tiles=document.createElement('div');tiles.className='tiles';body.appendChild(line);body.appendChild(tiles);
+ let chosen=[];const draw=()=>{line.innerHTML='';chosen.forEach((c,i)=>{const t=document.createElement('button');t.className='tile';t.textContent=c.w;t.onclick=()=>{chosen.splice(i,1);c.el.classList.remove('used');draw()};line.appendChild(t)});foot.querySelector('.btn').disabled=!chosen.length};
+ pool.forEach(w=>{const t=document.createElement('button');t.className='tile';t.textContent=w;t.onclick=()=>{t.classList.add('used');chosen.push({w,el:t});draw()};tiles.appendChild(t)});
+ foot.innerHTML=`<button class="btn" disabled>Check</button>`;
+ foot.querySelector('.btn').onclick=()=>{const got=chosen.map(c=>c.w).join(' ');const ok=norm(got)===norm(e.es);line.querySelectorAll('.tile').forEach(t=>t.onclick=null);tiles.querySelectorAll('.tile').forEach(t=>t.onclick=null);
+  setFoot(foot,ok,ok?'':'Correct answer:',`<span class="why"><b>${esc(e.es)}</b></span>`);say(e.es);done(ok)}}
+
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition||null;
+const deacc=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'');
+function grade(target,heard){const tw=words(target).map(w=>w.toLowerCase());const hw=new Set(words(deacc(heard)).map(w=>w.toLowerCase()));
+ const marks=tw.map(w=>({w,ok:hw.has(deacc(w))}));const hit=marks.filter(m=>m.ok).length;return {marks,score:tw.length?hit/tw.length:0}}
+
+function speak(e,body,foot,done){let tries=0;
+ body.innerHTML=`<p class="eyebrow">Speak it out loud</p><h2>Say this in Spanish</h2><p class="prompt-en">${esc(e.en)}</p><p class="hint">${esc(e.hint||'')}</p>
+ <div class="speakbox"><button class="mic" id="rec" aria-label="Record">${ICON.mic}</button><b id="st">Tap the mic and say it</b><span class="hint" id="sub">Your pronunciation is checked word by word.</span><div id="out"></div></div>`;
+ const box=body.querySelector('.speakbox'),st=box.querySelector('#st'),sub=box.querySelector('#sub'),out=box.querySelector('#out'),rec=box.querySelector('#rec');
+ const selfGrade=reason=>{box.className='reveal';box.innerHTML=`<p class="eyebrow">Native version</p><div class="es">${esc(e.es)}</div><p class="hint">${esc(reason)}</p>`;box.appendChild(audioRow(e.es));say(e.es);
+  foot.innerHTML=`<div class="msg"><span>Say it after the voice. Did you get it?</span></div><div class="row"><button class="btn alt" id="no">Not yet</button><button class="btn" id="yes">Got it</button></div>`;
+  foot.querySelector('#yes').onclick=()=>{setFoot(foot,true,'Self-graded.');done(true)};
+  foot.querySelector('#no').onclick=()=>{setFoot(foot,false,'No heart lost for honesty. It comes back later in the lesson.');L.wrong++;if(!L.immersion)L.retry.push(L.queue[L.k]);foot.querySelector('.btn').onclick=()=>{L.k++;render()}}};
+ foot.innerHTML=`<div class="row"><button class="btn alt" id="skip">Can't speak now</button></div>`;
+ foot.querySelector('#skip').onclick=()=>selfGrade('Grade yourself this time.');
+ if(!SR){selfGrade('This browser has no speech recognition. Chrome or Safari do.');return}
+ let r=null;
+ const showResult=heard=>{tries++;const g=grade(e.es,heard);const ok=g.score>=0.75;
+  out.innerHTML=`<p class="hint" style="margin:6px 0 2px">You said: <i>${esc(heard||'(nothing heard)')}</i></p><div class="es" style="font-size:1.25rem;font-weight:800">${g.marks.map(m=>`<span style="color:${m.ok?'var(--good)':'var(--bad)'};${m.ok?'':'text-decoration:underline wavy'}">${esc(m.w)}</span>`).join(' ')}</div>`;
+  const missed=g.marks.filter(m=>!m.ok).map(m=>m.w);
+  if(ok){st.textContent='¡Muy bien!';sub.textContent=missed.length?'Close enough. Listen to the underlined words once more.':'Every word landed.';
+   setFoot(foot,true,missed.length?'Hear it once more and repeat the underlined words.':'Perfect match.',`<span class="why"><b>${esc(e.es)}</b></span>`);say(e.es);done(true)}
+  else{st.textContent='Not quite yet';sub.textContent='Underlined words were not heard. Tap to hear them slowly, then try again.';
+   foot.innerHTML=`<div class="msg"><span style="color:var(--bad)">Try again (${tries}/3)</span><span class="why"><b>${esc(e.es)}</b></span></div><div class="row"><button class="chip big" id="hear">${ICON.turtle} Hear the hard words</button>${tries>=3?'<button class="btn alt" id="give">Reveal and move on</button>':''}</div>`;
+   foot.querySelector('#hear').onclick=()=>say(missed.join('. ')||e.es,true);const gv=foot.querySelector('#give');if(gv)gv.onclick=()=>{setFoot(foot,false,'Listen and repeat with the voice, then continue.');say(e.es);done(false)};
+   say(missed.length?missed.join('. '):e.es,true)}};
+ rec.onclick=()=>{if(r){try{r.stop()}catch(x){}return}
+  try{window.speechSynthesis&&window.speechSynthesis.cancel();r=new SR();r.lang='es-ES';r.interimResults=true;r.maxAlternatives=3;let final='';
+   rec.style.background='var(--bad)';st.textContent='Listening… tap again to stop';sub.textContent='';out.innerHTML='';
+   r.onresult=ev=>{let txt='';for(const res of ev.results){txt+=res[0].transcript+' ';if(res.isFinal)final=txt}st.textContent=txt.trim()||'Listening…'};
+   r.onerror=ev=>{r=null;rec.style.background='';if(ev.error==='not-allowed'||ev.error==='service-not-allowed'){selfGrade('The microphone is blocked here. Open the downloaded file in Chrome or Safari to be graded by ear; for now, grade yourself.')}else if(ev.error==='no-speech'){st.textContent='Nothing heard. Try again.'}else{st.textContent='Mic error: '+ev.error}};
+   r.onend=()=>{rec.style.background='';const heard=(final||st.textContent.replace(/^Listening.*$/,'')).trim();r=null;if(heard&&!/^(Listening|Nothing)/.test(heard))showResult(heard)};
+   r.start()}catch(x){r=null;selfGrade('Could not start the microphone. Grade yourself this time.')}}}
+
+function transfer(e,body,foot,done){
+ body.innerHTML=`<p class="eyebrow">Transfer rule</p><h2>${esc(e.q)}</h2>`;
+ const wrap=document.createElement('div');wrap.className='opts';let sel=null;
+ shuffle(e.opts.map((o,i)=>({o,i}))).forEach(o=>{const b=document.createElement('button');b.className='opt';b.innerHTML=`<span class="k">·</span><span>${esc(o.o)}</span>`;b.onclick=()=>{if(sel&&sel.locked)return;wrap.querySelectorAll('.opt').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');sel={b,o};foot.querySelector('.btn').disabled=false};wrap.appendChild(b)});
+ body.appendChild(wrap);foot.innerHTML=`<button class="btn" disabled>Check</button>`;
+ foot.querySelector('.btn').onclick=()=>{sel.locked=true;const ok=sel.o.i===e.a;wrap.querySelectorAll('.opt').forEach(x=>{x.disabled=true;if(x.textContent.includes(e.opts[e.a]))x.classList.add('ok');else if(x===sel.b)x.classList.add('no')});say(e.opts[e.a]);setFoot(foot,ok,e.why);done(ok)}}
+
+function results(){const s=document.createElement('div');s.className='screen';const u=L.u;const up=uprog(u.id);
+ const total=L.correct+L.wrong;const acc=total?Math.round(100*L.correct/total):0;
+ if(!L.finished){L.finished=true;
+  if(L.immersion){addXp(L.xp);if(L.correct>=8&&S.hearts<5){S.hearts++;save()}}
+  else{up.done=u.ex.length;up.crowns++;up.best=Math.max(up.best,acc);L.xp+=20;addXp(L.xp)}}
+ s.innerHTML=`<div class="result"><p class="eyebrow">${L.immersion?'Inmersión':esc(u.name)}</p><h1>${L.immersion?'Buen trabajo.':'¡Unidad completa!'}</h1><p class="muted">${L.immersion?'That is what being surrounded by Spanish feels like.':'Crown earned. The next unit is open.'}</p>
+ <div class="tiles-stat"><div><b>+${L.xp}</b><small>XP</small></div><div><b>${acc}%</b><small>accuracy</small></div><div><b>${S.streak}</b><small>day streak</small></div></div>
+ <button class="btn">Back home</button>${L.immersion?'<button class="btn warm" id="again">Keep listening</button>':''}</div>`;
+ s.querySelector('.btn').onclick=()=>go({name:'home'});const ag=s.querySelector('#again');if(ag)ag.onclick=()=>go({name:'immersion'});return s}
+
+/* ---------- immersion: endless listen-and-reply from unlocked units ---------- */
+function immersion(){const pool=[];UNITS.forEach((u,i)=>{if(unlocked(i))u.ex.forEach((e,k)=>{if(e.t==='listen')pool.push({u,k})})});
+ const pick=shuffle(pool).slice(0,12);if(!pick.length){go({name:'home'});return document.createElement('div')}
+ const u={id:'imm',name:'Inmersión',intro:[],ex:pick.map(p=>p.u.ex[p.k]),color:'#e0a42c'};
+ L={ui:-1,u,queue:u.ex.map((_,k)=>k),k:0,intro:0,correct:0,wrong:0,retry:[],xp:0,immersion:true};view={name:'lesson'};return lesson()}
+
+/* ---------- chat (sample capability) ---------- */
+let C=null;
+function chat(){const s=document.createElement('div');s.className='screen';
+ if(!C){C={persona:PERSONAS[Math.random()*PERSONAS.length|0],msgs:[],opts:[],busy:false,sample:undefined}}
+ const top=document.createElement('div');top.className='top';top.innerHTML=`<button class="x">✕</button><div style="flex:1"><b>${esc(C.persona.name)}</b> <span class="muted">· ${esc(C.persona.city)}</span></div><label class="toggle"><input type="checkbox" id="ct" ${S.showText?'checked':''}> Text</label>`;
+ top.querySelector('.x').onclick=()=>{window.speechSynthesis&&window.speechSynthesis.cancel();go({name:'home'})};
+ top.querySelector('#ct').onchange=ev=>{S.showText=ev.target.checked;save();render()};s.appendChild(top);
+ const box=document.createElement('div');box.className='chat';s.appendChild(box);
+ const foot=document.createElement('div');foot.className='foot';s.appendChild(foot);
+ const draw=()=>{box.innerHTML='';if(!C.msgs.length)box.innerHTML=`<p class="hint">${esc(C.persona.name)} is ${esc(C.persona.role)} in ${esc(C.persona.city)}. Say hola to start. Tap a reply or type your own.</p>`;
+  C.msgs.forEach((m,i)=>{const d=document.createElement('div');d.className='msg '+(m.role==='user'?'me':'them'+(S.showText?'':' hide'));d.innerHTML=`<span class="text">${esc(m.text)}</span>${m.tr?`<span class="tr">${esc(m.tr)}</span>`:''}`;
+   if(m.role!=='user'){const r=document.createElement('div');r.className='audio';r.style.marginTop='6px';r.innerHTML=`<button class="chip">${ICON.play} Play</button><button class="chip">Show</button>`;r.children[0].onclick=()=>say(m.text);r.children[1].onclick=()=>{d.classList.remove('hide')};d.appendChild(r)}box.appendChild(d)});
+  foot.innerHTML='';if(C.sample===null){foot.innerHTML=`<p class="hint">Free chat needs the "ask Claude" permission for this page, which isn't available in this view. Inmersión still works.</p>`;return}
+  if(C.busy){foot.innerHTML='<p class="hint">…</p>';return}
+  const o=document.createElement('div');o.className='opts';o.style.marginBottom='10px';
+  (C.opts.length?C.opts:(C.msgs.length?[]:['¡Hola! ¿Cómo estás?','Hola, me llamo Sam. ¿Y tú?','Buenos días. ¿Qué haces?'])).forEach((t,i)=>{const b=document.createElement('button');b.className='opt';b.innerHTML=`<span class="k">${i+1}</span><span>${esc(t)}</span>`;b.onclick=()=>send(t);o.appendChild(b)});
+  foot.appendChild(o);const ir=document.createElement('form');ir.className='inputrow';ir.innerHTML=`<input id="ci" placeholder="Escribe en español…" autocomplete="off"><button class="chip big" type="submit">Enviar</button>`;ir.onsubmit=ev=>{ev.preventDefault();const v=ir.querySelector('#ci').value.trim();if(v)send(v)};foot.appendChild(ir);box.scrollTop=box.scrollHeight};
+ const level=()=>{const n=UNITS.filter((u,i)=>unlocked(i)).length;return UNITS.slice(0,n).map(u=>u.name+' ('+u.tag+')').join('; ')};
+ async function send(text){if(C.busy)return;C.msgs.push({role:'user',text});C.opts=[];C.busy=true;draw();
+  if(C.sample===undefined){try{C.sample=await (window.claude&&window.claude.use?window.claude.use('sample'):null)}catch(e){C.sample=null}}
+  if(!C.sample){C.busy=false;draw();return}
+  const sys=`You are ${C.persona.name}, ${C.persona.role} in ${C.persona.city}. You only speak Spanish. The learner studies with the Language Transfer method and has covered these structures so far: ${level()}. Use ONLY vocabulary and grammar inside that range, short natural sentences (max 2), warm and curious, and always end with a question to keep them talking. Gently model the correct form if they make a mistake, without lecturing. Reply ONLY with JSON: {"say":"<your Spanish reply>","tr":"<English translation>","options":["<reply 1>","<reply 2>","<reply 3>"]} where options are three plausible things the learner could say next, in Spanish, within their level, varied in meaning.`;
+  const conv=[{role:'user',content:sys+'\n\nConversation so far:\n'+C.msgs.map(m=>(m.role==='user'?'Learner':C.persona.name)+': '+m.text).join('\n')+'\n\nRespond now as JSON.'}];
+  try{const r=await C.sample.json(conv,{modelTier:'quick',cache:false});const say_=String(r.say||'…');C.msgs.push({role:'them',text:say_,tr:r.tr?String(r.tr):''});C.opts=Array.isArray(r.options)?r.options.slice(0,3).map(String):[];say(say_)}
+  catch(err){if(err&&err.code==='not_granted'){C.sample=null}else{C.msgs.push({role:'them',text:'Perdona, ¿puedes repetir?',tr:'Sorry, can you repeat?'})}}
+  C.busy=false;draw()}
+ draw();return s}
+
+
+/* ---------- car mode: hands-free audio lessons ---------- */
+let enVoice=null;function pickEn(){const vs=speechSynthesis.getVoices();enVoice=vs.find(v=>v.name===S.enVoice)||vs.find(v=>/en-AU/i.test(v.lang))||vs.find(v=>/en-GB/i.test(v.lang))||vs.find(v=>/^en/i.test(v.lang))||null}
+function speakAsync(text,lang,slow){return new Promise(res=>{if(!canSpeak){setTimeout(res,600);return}pickEn();const u=new SpeechSynthesisUtterance(text);u.lang=lang==='es'?'es-ES':'en-AU';u.voice=lang==='es'?voice:enVoice;u.rate=lang==='es'?(slow?0.6:0.9):1.0;
+ let done=false;const fin=()=>{if(!done){done=true;res()}};u.onend=fin;u.onerror=fin;setTimeout(fin,1500+text.length*110*(slow?1.6:1));speechSynthesis.speak(u)})}
+function buildScript(u,imm){const st=[];const T=(t)=>st.push({k:'say',lang:'en',t,role:'Teacher'});const E=(t,slow,role)=>st.push({k:'say',lang:'es',t,slow,role:role||'Spanish'});const P=(t,ms)=>st.push({k:'pause',t,ms});
+ const pauseFor=t=>1500+words(t).length*600;
+ if(!imm){T(`Unit: ${u.name}. ${u.tag}. Eyes on the road; just speak when I pause.`);u.intro.forEach(t=>T(t))}
+ else T('Immersion drive. I will say something in Spanish; reply out loud in the pause, then hear a good reply.');
+ const drills=u.ex.filter(e=>e.t==='build'||e.t==='speak');const convo=u.ex.filter(e=>e.t==='listen');
+ if(drills.length){T('First, some building. How would you say…');drills.forEach(e=>{T(e.en);P(e.es,pauseFor(e.es));E(e.es);P('',700);T('Again.');E(e.es);P(e.es,pauseFor(e.es)*0.7);E(e.es)})}
+ if(convo.length){T(imm?'Here we go.':'Now a conversation. Someone speaks to you; reply in Spanish.');convo.forEach(e=>{E(e.es,false,'They say');P('',400);E(e.es,true,'Slowly');P(e.opts[e.a],pauseFor(e.opts[e.a])+1500,'reply');T('A good reply:');E(e.opts[e.a],false,'Reply');P('',500);T('Say it with me.');E(e.opts[e.a]);P(e.opts[e.a],pauseFor(e.opts[e.a])*0.7)})}
+ T(imm?'That is the drive. Buen viaje.':`That is the end of ${u.name}. Muy bien.`);return st}
+
+function drive(){const s=document.createElement('div');s.className='screen';s.appendChild(statusBar());
+ const d=document.createElement('div');d.className='drive';
+ d.innerHTML=`<p class="eyebrow">Conducir · hands-free</p><h1>Pick a drive, then don't touch the phone.</h1><p class="muted">The teacher explains, asks you to say things, pauses for you, then gives the Spanish. Keep your eyes on the road.</p>`;
+ const sr=document.createElement('div');sr.className='srow';sr.innerHTML=`Pause length <select id="pz"><option value="0.7">Quick</option><option value="1">Normal</option><option value="1.5">Relaxed</option></select> ${SR?'<label class="toggle"><input type="checkbox" id="lm"> Listen and correct me</label>':''}`;
+ sr.querySelector('#pz').value=S.pause;sr.querySelector('#pz').onchange=e=>{S.pause=+e.target.value;save()};const lm=sr.querySelector('#lm');if(lm){lm.checked=S.listenMic;lm.onchange=e=>{S.listenMic=e.target.checked;save()}}d.appendChild(sr);
+ const imm=document.createElement('button');imm.className='big';imm.innerHTML='<b>Immersion drive</b><small>Spanish lines from every open unit; reply in the pause. About 10 minutes.</small>';imm.onclick=()=>startDrive(null);d.appendChild(imm);
+ UNITS.forEach((u,i)=>{if(!unlocked(i))return;const b=document.createElement('button');b.className='big';b.innerHTML=`<b>${i+1}. ${esc(u.name)}</b><small>${esc(u.tag)} · about ${Math.round(u.ex.length*1.1)} min</small>`;b.onclick=()=>startDrive(i);d.appendChild(b)});
+ s.appendChild(d);return s}
+
+let D=null;
+function startDrive(i){let u;if(i===null){const pool=[];UNITS.forEach((u2,k)=>{if(unlocked(k))u2.ex.forEach(e=>{if(e.t==='listen')pool.push(e)})});u={name:'Immersion drive',tag:'',intro:[],ex:shuffle(pool).slice(0,14)}}else u=UNITS[i];
+ D={u,imm:i===null,steps:buildScript(u,i===null),i:0,playing:false,gen:0,heard:'',good:0,asked:0};go({name:'player'})}
+let wakeLock=null;async function keepAwake(on){try{if(on&&navigator.wakeLock&&!wakeLock)wakeLock=await navigator.wakeLock.request('screen');if(!on&&wakeLock){await wakeLock.release();wakeLock=null}}catch(e){}}
+
+function player(){const s=document.createElement('div');s.className='screen';
+ const top=document.createElement('div');top.className='top';top.innerHTML=`<button class="x">✕</button><div class="pbar" style="flex:1"><i id="pp" style="--p:0%"></i></div><span class="muted" id="pct" style="font-weight:800;font-variant-numeric:tabular-nums">0%</span>`;
+ top.querySelector('.x').onclick=()=>{stopDrive();go({name:'drive'})};s.appendChild(top);
+ const p=document.createElement('div');p.className='player';
+ p.innerHTML=`<p class="eyebrow">${esc(D.u.name)}</p><div class="stage"><div class="role" id="role">Ready</div><div class="line" id="line">Tap play. Then just listen and speak.</div><div class="ring" id="ring"></div><div class="yours" id="yours"></div></div>
+ <div class="ctl"><button id="back">◀ Back</button><button class="main" id="play">▶ Play</button><button id="next">Next ▶</button></div>`;
+ s.appendChild(p);
+ p.querySelector('#play').onclick=()=>D.playing?pauseDrive():runDrive();
+ p.querySelector('#next').onclick=()=>{jump(1)};p.querySelector('#back').onclick=()=>{jump(-1)};
+ return s}
+function ui(){return{role:document.getElementById('role'),line:document.getElementById('line'),ring:document.getElementById('ring'),yours:document.getElementById('yours'),play:document.getElementById('play'),pp:document.getElementById('pp'),pct:document.getElementById('pct')}}
+function stopDrive(){if(!D)return;D.playing=false;D.gen++;try{speechSynthesis.cancel()}catch(e){}if(D.rec){try{D.rec.abort()}catch(e){}D.rec=null}keepAwake(false)}
+function pauseDrive(){stopDrive();const x=ui();if(x.play)x.play.textContent='▶ Play';if(x.ring)x.ring.classList.remove('live')}
+function jump(d){const st=D.steps;let i=D.i+d;while(i>0&&i<st.length&&!(st[i].k==='say'&&st[i].role==='Teacher'&&/^(Again|Say it|A good)/.test(st[i].t)===false))i+=d;D.i=Math.max(0,Math.min(st.length-1,i));if(D.playing){stopDrive();runDrive()}else{const x=ui();x.role.textContent=st[D.i].role||'';x.line.textContent=st[D.i].t||''}}
+async function runDrive(){const gen=++D.gen;D.playing=true;keepAwake(true);const x=ui();x.play.textContent='❚❚ Pause';
+ while(D.i<D.steps.length&&D.gen===gen){const st=D.steps[D.i];const pr=Math.round(100*D.i/D.steps.length);x.pp.style.setProperty('--p',pr+'%');x.pct.textContent=pr+'%';
+  if(st.k==='say'){x.role.textContent=st.role;x.line.textContent=st.t;x.line.className='line'+(st.lang==='es'?' es':'');x.ring.classList.remove('live');x.ring.textContent='';x.yours.textContent='';await speakAsync(st.t,st.lang,st.slow)}
+  else{const ms=st.ms*S.pause;x.role.textContent=st.t?'Your turn':'';x.line.textContent=st.t?'…':'';x.line.className='line';x.ring.classList.add('live');
+   const useMic=SR&&S.listenMic&&st.t;let heard='';if(useMic){try{const r=new SR();D.rec=r;r.lang='es-ES';r.interimResults=true;r.onresult=ev=>{let t='';for(const res of ev.results)t+=res[0].transcript+' ';heard=t.trim();x.yours.textContent=heard};r.onerror=ev=>{if(ev.error==='not-allowed'){S.listenMic=false;save()}};r.start()}catch(e){}}
+   const t0=Date.now();while(Date.now()-t0<ms&&D.gen===gen){x.ring.textContent=Math.ceil((ms-(Date.now()-t0))/1000);await new Promise(r=>setTimeout(r,200))}
+   x.ring.classList.remove('live');x.ring.textContent='';if(D.rec){try{D.rec.stop()}catch(e){}D.rec=null;await new Promise(r=>setTimeout(r,400))}
+   if(D.gen!==gen)break;
+   if(useMic&&st.t){D.asked++;const g=grade(st.t,heard);if(heard&&g.score>=0.75){D.good++;x.role.textContent='Teacher';x.line.textContent='¡Muy bien!';await speakAsync('Muy bien.','es')}else if(heard){const missed=g.marks.filter(m=>!m.ok).map(m=>m.w).join(', ');x.role.textContent='Teacher';x.line.textContent='Listen for: '+missed;await speakAsync('Not quite. Listen.','en')}}}
+  if(D.gen!==gen)return;D.i++}
+ if(D.gen===gen&&D.i>=D.steps.length){D.playing=false;keepAwake(false);const xp=D.imm?40:60;addXp(xp);x.play.textContent='▶ Again';x.role.textContent='Done';x.line.textContent=`+${xp} XP${D.asked?` · ${D.good}/${D.asked} heard right`:''}`;D.i=0;x.pp.style.setProperty('--p','100%');x.pct.textContent='100%'}}
+
+/* ---------- settings ---------- */
+function settings(){const s=document.createElement('div');s.className='screen';s.appendChild(statusBar());
+ const d=document.createElement('div');d.className='settings';
+ d.innerHTML=`<h2>Settings</h2>
+ <label class="toggle"><input type="checkbox" id="st" ${S.showText?'checked':''}> Show Spanish text while listening (off keeps it ear-first)</label>
+ <label class="toggle"><input type="checkbox" id="ua" ${S.unlockAll?'checked':''}> Unlock every unit (if you already know the Language Transfer course)</label>
+ <p class="hint">Voice: ${voice?esc(voice.name+' · '+voice.lang):(canSpeak?'default Spanish voice':'none available')}. On iPhone, Spanish voices install under Settings → Accessibility → Spoken Content.</p>
+ <label class="toggle">Teacher voice <select id="ev"></select></label>
+ <p class="hint">Hearts refill each day. A finished Inmersión with 8+ correct restores one.</p>
+ <button class="btn alt" id="reset">Reset all progress</button><button class="btn" id="back">Done</button>`;
+ d.querySelector('#st').onchange=e=>{S.showText=e.target.checked;save()};d.querySelector('#ua').onchange=e=>{S.unlockAll=e.target.checked;save()};
+ const ev=d.querySelector('#ev');(canSpeak?speechSynthesis.getVoices():[]).filter(v=>/^en/i.test(v.lang)).forEach(v=>{const o=document.createElement('option');o.value=v.name;o.textContent=v.name+' · '+v.lang;if(v.name===S.enVoice)o.selected=true;ev.appendChild(o)});ev.onchange=e=>{S.enVoice=e.target.value;save()};
+ d.querySelector('#back').onclick=()=>go({name:'home'});
+ d.querySelector('#reset').onclick=ev=>{if(ev.target.dataset.sure){S=fresh();save();go({name:'home'});toast('Progress reset')}else{ev.target.dataset.sure='1';ev.target.textContent='Tap again to confirm reset'}};
+ s.appendChild(d);return s}
+
+render();
+})();
+</script>
+</body></html>
